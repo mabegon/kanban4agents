@@ -1,43 +1,21 @@
-<<<<<<< HEAD
-// Configuration loader for frontend - uses environment variables from backend
-let API_BASE_URL = 'http://localhost:8000';
-=======
 // Configuration - uses default values, can be overridden by environment settings
 const DEFAULT_API_BASE_URL = 'http://127.0.0.1:5000';
 let API_BASE_URL = DEFAULT_API_BASE_URL;
->>>>>>> feature/flask-migration
 
-// Function to load backend configuration
-async function loadBackendConfig() {
-    try {
-        // First, check if we're already configured with a direct URL override (for development)
-        if (typeof window !== 'undefined' && window.API_CONFIG) {
-            if (window.API_CONFIG.BACKEND_URL) {
-                API_BASE_URL = window.API_CONFIG.BACKEND_URL;
-                return;
-            }
-        }
-        
-        // Try to load configuration from backend endpoint
-        const response = await fetch('/config');
-        if (response.ok) {
-            const config = await response.json();
-            if (config.backend_url && config.backend_url !== 'http://localhost:8000') {
-                API_BASE_URL = config.backend_url;
-            }
-        } else {
-            // If endpoint doesn't exist, fall back to defaults
-            console.log('No configuration endpoint found');
-        }
-    } catch (error) {
-        console.warn('Could not load configuration from backend:', error);
+// Function to initialize configuration from environment variables (if available)
+function initConfig() {
+    // In a production environment with server-side rendering, we would load from 
+    // an injected variable or a config endpoint
+    // For now, we're maintaining the default value but allowing customization
+    
+    // Allow override via global window object (for development/debugging)
+    if (typeof window !== 'undefined' && window.config && window.config.backendUrl) {
+        API_BASE_URL = window.config.backendUrl;
     }
 }
 
-// Load configuration when the page is ready
-document.addEventListener('DOMContentLoaded', () => {
-    loadBackendConfig();
-});
+// Initialize configuration
+initConfig();
 
 // Current user state
 let currentUser = null;
@@ -170,9 +148,12 @@ async function login(username, password) {
         const response = await fetch(`${API_BASE_URL}/token`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
-            body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+            body: JSON.stringify({
+                username,
+                password
+            })
         });
         
         if (response.ok) {
@@ -226,7 +207,7 @@ async function register(username, email, password) {
 
 async function loadBoards() {
     try {
-        const response = await fetch(`${API_BASE_URL}/boards`, {
+        const response = await fetch(`${API_BASE_URL}/api/boards`, {
             headers: {
                 'Authorization': `Bearer ${currentToken}`
             }
@@ -278,7 +259,7 @@ function createBoardElement(board) {
 
 async function loadColumnsForBoard(boardId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/columns?board_id=${boardId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/columns?board_id=${boardId}`, {
             headers: {
                 'Authorization': `Bearer ${currentToken}`
             }
@@ -326,7 +307,7 @@ function createColumnElement(column) {
 
 async function loadTasksForColumn(columnId, columnElement) {
     try {
-        const response = await fetch(`${API_BASE_URL}/tasks?column_id=${columnId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/tasks?column_id=${columnId}`, {
             headers: {
                 'Authorization': `Bearer ${currentToken}`
             }
@@ -407,7 +388,7 @@ function closeModalTask() {
 
 async function loadColumnsForTaskModal(boardId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/columns?board_id=${boardId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/columns?board_id=${boardId}`, {
             headers: {
                 'Authorization': `Bearer ${currentToken}`
             }
@@ -451,7 +432,7 @@ async function handleBoardSubmit(e) {
         let response;
         if (boardId) {
             // Update existing board
-            response = await fetch(`${API_BASE_URL}/boards/${boardId}`, {
+            response = await fetch(`${API_BASE_URL}/api/boards/${boardId}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -464,7 +445,7 @@ async function handleBoardSubmit(e) {
             });
         } else {
             // Create new board
-            response = await fetch(`${API_BASE_URL}/boards`, {
+            response = await fetch(`${API_BASE_URL}/api/boards`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -508,7 +489,7 @@ async function handleTaskSubmit(e) {
         let response;
         if (taskId) {
             // Update existing task
-            response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+            response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,
@@ -523,7 +504,7 @@ async function handleTaskSubmit(e) {
             });
         } else {
             // Create new task
-            response = await fetch(`${API_BASE_URL}/tasks`, {
+            response = await fetch(`${API_BASE_URL}/api/tasks`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${currentToken}`,

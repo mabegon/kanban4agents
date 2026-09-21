@@ -1,5 +1,37 @@
-// API base URL - change this to your server's address when deploying
-const API_BASE_URL = 'http://localhost:8000';
+// Configuration loader for frontend - uses environment variables from backend
+let API_BASE_URL = 'http://localhost:8000';
+
+// Function to load backend configuration
+async function loadBackendConfig() {
+    try {
+        // First, check if we're already configured with a direct URL override (for development)
+        if (typeof window !== 'undefined' && window.API_CONFIG) {
+            if (window.API_CONFIG.BACKEND_URL) {
+                API_BASE_URL = window.API_CONFIG.BACKEND_URL;
+                return;
+            }
+        }
+        
+        // Try to load configuration from backend endpoint
+        const response = await fetch('/config');
+        if (response.ok) {
+            const config = await response.json();
+            if (config.backend_url && config.backend_url !== 'http://localhost:8000') {
+                API_BASE_URL = config.backend_url;
+            }
+        } else {
+            // If endpoint doesn't exist, fall back to defaults
+            console.log('No configuration endpoint found');
+        }
+    } catch (error) {
+        console.warn('Could not load configuration from backend:', error);
+    }
+}
+
+// Load configuration when the page is ready
+document.addEventListener('DOMContentLoaded', () => {
+    loadBackendConfig();
+});
 
 // Current user state
 let currentUser = null;

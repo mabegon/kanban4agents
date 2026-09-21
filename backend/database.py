@@ -54,6 +54,17 @@ def init_database():
         )
     """)
     
+    # Create default user (will be removed in production)
+    cursor.execute("SELECT * FROM users WHERE username = 'default_user'")
+    if not cursor.fetchone():
+        # Create a default user with a simple password for development
+        import bcrypt
+        default_password = bcrypt.hashpw("default_password".encode('utf-8'), bcrypt.gensalt())
+        cursor.execute(
+            "INSERT INTO users (username, email, hashed_password) VALUES (?, ?, ?)",
+            ("default_user", "default@example.com", default_password)
+        )
+    
     conn.commit()
     conn.close()
 

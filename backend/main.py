@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -24,6 +25,10 @@ init_database()
 SECRET_KEY = "your-secret-key-change-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Get configuration from environment variables
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_PORT = os.getenv("BACKEND_PORT", "8000")
 
 # Pydantic models
 class UserBase(BaseModel):
@@ -80,6 +85,11 @@ class Column(ColumnBase):
     class Config:
         from_attributes = True
 
+# Configuration model
+class ConfigResponse(BaseModel):
+    backend_url: str
+    backend_port: str
+
 # Helper functions
 def verify_password(plain_password, hashed_password):
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password)
@@ -119,6 +129,42 @@ from .database import (
 )
 
 # Authentication endpoints
+@app.post("/register", response_model=User)
+async def register_user(user: UserCreate):
+    existing_user = get_user_by_username(user.username)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    hashed_password = get_password_hash(user.password)
+    new_user = create_user(user.username, user.email, hashed_password)
+    return new_user
+
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = get_user_by_username(form_data.username)
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["username"]}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
+# Configuration endpoint
+@app.get("/config", response_model=ConfigResponse)
+async def get_config():
+    return ConfigResponse(
+        backend_url=BACKEND_URL,
+        backend_port=BACKEND_PORT
+    )
+
+# Task endpoints
 @app.post("/register", response_model=User)
 async def register_user(user: UserCreate):
     existing_user = get_user_by_username(user.username)

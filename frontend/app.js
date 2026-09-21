@@ -1,21 +1,37 @@
-// Configuration - uses default values, can be overridden by environment settings
-const DEFAULT_API_BASE_URL = 'http://localhost:8000';
-let API_BASE_URL = DEFAULT_API_BASE_URL;
+// Configuration loader for frontend - uses environment variables from backend
+let API_BASE_URL = 'http://localhost:8000';
 
-// Function to initialize configuration from environment variables (if available)
-function initConfig() {
-    // In a production environment with server-side rendering, we would load from 
-    // an injected variable or a config endpoint
-    // For now, we're maintaining the default value but allowing customization
-    
-    // Allow override via global window object (for development/debugging)
-    if (typeof window !== 'undefined' && window.config && window.config.backendUrl) {
-        API_BASE_URL = window.config.backendUrl;
+// Function to load backend configuration
+async function loadBackendConfig() {
+    try {
+        // First, check if we're already configured with a direct URL override (for development)
+        if (typeof window !== 'undefined' && window.API_CONFIG) {
+            if (window.API_CONFIG.BACKEND_URL) {
+                API_BASE_URL = window.API_CONFIG.BACKEND_URL;
+                return;
+            }
+        }
+        
+        // Try to load configuration from backend endpoint
+        const response = await fetch('/config');
+        if (response.ok) {
+            const config = await response.json();
+            if (config.backend_url && config.backend_url !== 'http://localhost:8000') {
+                API_BASE_URL = config.backend_url;
+            }
+        } else {
+            // If endpoint doesn't exist, fall back to defaults
+            console.log('No configuration endpoint found');
+        }
+    } catch (error) {
+        console.warn('Could not load configuration from backend:', error);
     }
 }
 
-// Initialize configuration
-initConfig();
+// Load configuration when the page is ready
+document.addEventListener('DOMContentLoaded', () => {
+    loadBackendConfig();
+});
 
 // Current user state
 let currentUser = null;

@@ -2,4 +2,5 @@ opencode.json
 venv/
 *.db
 __pycache__/
+.env
 

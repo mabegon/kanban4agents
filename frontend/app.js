@@ -1,5 +1,21 @@
-// API base URL - change this to your server's address when deploying
-const API_BASE_URL = 'http://localhost:8000';
+// Configuration - uses default values, can be overridden by environment settings
+const DEFAULT_API_BASE_URL = 'http://localhost:8000';
+let API_BASE_URL = DEFAULT_API_BASE_URL;
+
+// Function to initialize configuration from environment variables (if available)
+function initConfig() {
+    // In a production environment with server-side rendering, we would load from 
+    // an injected variable or a config endpoint
+    // For now, we're maintaining the default value but allowing customization
+    
+    // Allow override via global window object (for development/debugging)
+    if (typeof window !== 'undefined' && window.config && window.config.backendUrl) {
+        API_BASE_URL = window.config.backendUrl;
+    }
+}
+
+// Initialize configuration
+initConfig();
 
 // Current user state
 let currentUser = null;

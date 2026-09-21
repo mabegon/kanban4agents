@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Kanban Board</h1>
+            <div class="auth-section">
+                <div id="login-form">
+                    <input type="text" id="username" placeholder="Username" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button id="login-btn">Login</button>
+                    <button id="register-btn">Register</button>
+                </div>
+                <div id="user-info" class="hidden">
+                    <span id="user-greeting"></span>
+                    <button id="logout-btn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div id="boards-container" class="boards-container"></div>
+            <button id="add-board-btn">+ Add Board</button>
+        </main>
+
+        <div id="modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modal-title">Add Board</h2>
+                <form id="board-form">
+                    <input type="hidden" id="board-id">
+                    <input type="text" id="board-name" placeholder="Board name" required>
+                    <textarea id="board-description" placeholder="Description"></textarea>
+                    <button type="submit">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="task-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="task-modal-title">Add Task</h2>
+                <form id="task-form">
+                    <input type="hidden" id="task-id">
+                    <input type="text" id="task-title" placeholder="Task title" required>
+                    <textarea id="task-description" placeholder="Description"></textarea>
+                    <select id="task-board-id">
+                        <!-- Boards will be populated here -->
+                    </select>
+                    <select id="task-column-id">
+                        <!-- Columns will be populated here -->
+                    </select>
+                    <button type="submit">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

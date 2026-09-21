@@ -54,6 +54,13 @@ def init_database():
         )
     """)
     
+    # Check if we're in production mode
+    try:
+        import os
+        is_prod = os.getenv('IS_PROD', 'false').lower() == 'true'
+    except:
+        is_prod = False
+    
     # Create default user (will be removed in production)
     cursor.execute("SELECT * FROM users WHERE username = 'default_user'")
     if not cursor.fetchone():
@@ -64,6 +71,10 @@ def init_database():
             "INSERT INTO users (username, email, hashed_password) VALUES (?, ?, ?)",
             ("default_user", "default@example.com", default_password)
         )
+    
+    # If in production mode and default user exists, remove it
+    if is_prod:
+        cursor.execute("DELETE FROM users WHERE username = 'default_user'")
     
     conn.commit()
     conn.close()
